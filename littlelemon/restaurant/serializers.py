@@ -1,17 +1,30 @@
 from rest_framework import serializers
 from .models import Menu, Booking
+from django.contrib.auth.models import User
+
 
 class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
-        fields = ['title', 'price', 'inventory']
+        fields = "__all__"
+        extra_kwargs = {
+            "price": {"min_value": 0},
+            "inventory": {"min_value": 0},
+        }
+
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = '__all__'
+        fields = "__all__"
+        extra_kwargs = {
+            "no_of_guests": {"min_value": 1},
+        }
 
-class MenuItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Menu
-        fields = ['title', 'price', 'inventory']
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta():
+        model = User
+        fields = ['username']
+
+

@@ -1,27 +1,43 @@
 from django.shortcuts import render
-from .models import Menu, Booking, MenuItem
-from rest_framework import generics, viewsets
-from .serializers import MenuItemSerializer, BookingSerializer
-from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User
+
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+
+from .models import Menu, Booking
+from .serializers import MenuSerializer, BookingSerializer, UserSerializer
+from .permissions import IsManager
+
 
 # Create your views here.
 def index(request):
     return render(request, 'index.html', {})
 
 
-class MenuItemsView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = MenuItem.objects.all()
-    serializer_class = MenuItemSerializer
+class MenuViewSet(viewsets.ModelViewSet):
+    queryset = Menu.objects.all()
+    serializer_class = MenuSerializer
 
-
-class SingleMenuItemView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = MenuItem.objects.all()
-    serializer_class = MenuItemSerializer
+    def get_permissions(self):
+        if self.request.method == "GET":
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminUser | IsManager]
+        return [permission() for permission in permission_classes]
 
 
 class BookingViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
     booking = Booking.objects.all()
     serializer_class = BookingSerializer
+
+    def get_permissions(self):
+        permission_classes = [IsAuthenticated]
+        if self.request.method not in ["GET", "POST"]:
+            permission_classes = [IsAdminUser | IsManager]
+        return [permission() for permission in permission_classes]
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
